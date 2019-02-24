@@ -34,3 +34,6 @@ if __name__ == '__main__':
     for i in range(90):
         rls = affinity.rotate(rect, i, origin='centroid')
         draw(shape=rls,color='yellow')
+        x = xor(poly=poly, rect=rls)
+        draw(x)
+        print(loss(poly,rls))
