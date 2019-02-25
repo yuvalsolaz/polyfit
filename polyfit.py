@@ -44,7 +44,7 @@ def loss(poly, rect):
 
 # calculate gradient numericly:
 def gradient(poly,rect):
-    eps = Params(x=1, y=1, alpha=.1)
+    eps = Params(x=.1, y=.1, alpha=.1)
     l = loss(poly,rect)
     return Params(x = (loss(poly, affinity.translate(rect,eps.x, 0)) - l) / eps.x,
                   y = (loss(poly, affinity.translate(rect,0, eps.y)) - l) / eps.y,
@@ -71,16 +71,15 @@ def sgd(poly,cannonical_rect):
         # calculates current loss
         curr_loss = loss(poly, rect)
 
-        # update minimum point iteration count:
-        min_loss_iteration = min_loss_iteration + 1 if np.abs(curr_loss - min_loss) < .01 else 0
+        # update minimum loss iteration index:
+        if curr_loss < min_loss:
+            min_loss_iteration = i
+            min_loss = curr_loss
 
-        # check exit condition
-        if curr_loss == 0 or min_loss_iteration > loss_threshold_count :
+        # check stopping condition
+        if curr_loss == 0 or i - min_loss_iteration > loss_threshold_count :
             input(f'local minimum found. \n current loss : {curr_loss} \n ok ?')
             break
-
-        # update minimum loss
-        min_loss = np.minimum(curr_loss,min_loss)
 
         # calculate gradient :
         g = gradient(poly,rect)
@@ -101,7 +100,7 @@ def sgd(poly,cannonical_rect):
 
 if __name__ == '__main__':
 
-    poly = loads('POLYGON((-150 80, -50 120, 0 100, 110 110, 150 0, 50 -50, -100 -90, -150 80))')
+    poly = loads('POLYGON((-150 140, -50 140,0 140 , 10 100, 110 110, 150 0, 50 -50, -100 -90, -150 140))')
 
     if len(sys.argv) < 3:
         print(f'usage: python {sys.argv[0]} <width> <height>')
