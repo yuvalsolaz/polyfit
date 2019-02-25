@@ -18,12 +18,15 @@ max_iteration = 1000
 learning_rate = .01
 loss_threshold_count = 20
 
-
+'''
 def draw(shape,color='black'):
     GeoSeries(shape).plot(ax=ax,color=color)
     plt.pause(0.05)
+'''
 
 def draw_loss(poly,rect):
+    plt.cla()
+    GeoSeries(poly).plot(ax=ax,color='green')
     GeoSeries(rect).plot(ax=ax,color='yellow')
     x = xor(poly=poly, rect=rect)
     GeoSeries(x).plot(ax=ax,color='black')
@@ -93,13 +96,17 @@ def sgd(poly,cannonical_rect):
 
 
 
+poly = loads('POLYGON((-150 100, -50 150, 0 100, 110 160, 150 0, 50 -50, -100 -90, -150 100))')
 
 if __name__ == '__main__':
 
-    poly = loads('POLYGON((-150 100, -50 150, 0 100, 110 160, 150 0, 50 -50, -100 -90, -150 100))')
-    rect = loads('POLYGON((-150 -50, -150 50, 150 50, 150 -50, -150 -50))')
+    if len(sys.argv) < 3:
+        print(f'usage: python {sys.argv[0]} <width> <height>')
+        exit(1)
+    w = int(sys.argv[1]) / 2
+    h = int(sys.argv[2]) / 2
 
-    draw(poly,color='blue')
-    draw(rect,color='green')
+    rect = loads(f'POLYGON(({-w} {-h}, {-w} {h}, {w} {h}, {w} {-h}, {-w} {-h}))')
 
     sgd(poly,rect)
+pyt
