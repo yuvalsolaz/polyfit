@@ -20,7 +20,8 @@ loss_threshold_count = 20
 
 '''
 def draw(shape,color='black'):
-    GeoSeries(shape).plot(ax=ax,color=color)
+    GeoSeries(shape).plot(ax=ax,color=    poly = loads('POLYGON((-150 100, -50 150, 0 100, 110 160, 150 0, 50 -50, -100 -90, -150 100))')
+color)
     plt.pause(0.05)
 '''
 
@@ -64,6 +65,7 @@ def sgd(poly,cannonical_rect):
                          y = poly.centroid.y - rect.centroid.y ,
                          alpha = 0.0)
 
+    min_point_iteration = 0
 
     # sgd loop
     for i in range (max_iteration) :
@@ -71,9 +73,13 @@ def sgd(poly,cannonical_rect):
         # calculates current loss
         curr_loss = loss(poly, rect)
 
-        # check exit condition TODO loss_threshold_count:
-        #if curr_loss - min_loss > .1:
-        #    break
+        # update minimum point iteration count:
+        min_point_iteration = min_point_iteration + 1 if curr_loss - min_loss < .001 else 0
+
+        # check exit condition
+        if min_point_iteration > loss_threshold_count:
+            input(f'local minimum found. \n current loss : {curr_loss} \n ok ?')
+            break
 
         # update minimum loss
         min_loss = np.minimum(curr_loss,min_loss)
@@ -109,4 +115,3 @@ if __name__ == '__main__':
     rect = loads(f'POLYGON(({-w} {-h}, {-w} {h}, {w} {h}, {w} {-h}, {-w} {-h}))')
 
     sgd(poly,rect)
-pyt
