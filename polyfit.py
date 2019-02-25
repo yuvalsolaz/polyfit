@@ -44,7 +44,7 @@ def loss(poly, rect):
 
 # calculate gradient numericly:
 def gradient(poly,rect):
-    eps = Params(x=1, y=1, alpha=1)
+    eps = Params(x=1, y=1, alpha=.1)
     l = loss(poly,rect)
     return Params(x = (loss(poly, affinity.translate(rect,eps.x, 0)) - l) / eps.x,
                   y = (loss(poly, affinity.translate(rect,0, eps.y)) - l) / eps.y,
@@ -52,8 +52,6 @@ def gradient(poly,rect):
 
 
 def sgd(poly,cannonical_rect):
-
-
     # initialize minimum loss with current loss
     min_loss = sys.float_info.max
 
@@ -65,7 +63,7 @@ def sgd(poly,cannonical_rect):
                          y = poly.centroid.y - rect.centroid.y ,
                          alpha = 0.0)
 
-    min_point_iteration = 0
+    min_loss_iteration = 0
 
     # sgd loop
     for i in range (max_iteration) :
@@ -74,10 +72,10 @@ def sgd(poly,cannonical_rect):
         curr_loss = loss(poly, rect)
 
         # update minimum point iteration count:
-        min_point_iteration = min_point_iteration + 1 if curr_loss - min_loss < .001 else 0
+        min_loss_iteration = min_loss_iteration + 1 if np.abs(curr_loss - min_loss) < .01 else 0
 
         # check exit condition
-        if min_point_iteration > loss_threshold_count:
+        if curr_loss == 0 or min_loss_iteration > loss_threshold_count :
             input(f'local minimum found. \n current loss : {curr_loss} \n ok ?')
             break
 
@@ -89,7 +87,7 @@ def sgd(poly,cannonical_rect):
 
         # draw current position & current loss:
         draw_loss(poly,rect)
-        print (f'iteration {i} curr_loss: {curr_loss} minimum loss {min_loss} grad: {g}')
+        print (f'iteration:{i} current loss:{curr_loss} min loss:{min_loss} min loss iteration:{min_loss_iteration} grad:{g}')
 
         # update parameters x , y , alpha
         curr_params = Params(x = curr_params.x - learning_rate * g.x,
@@ -101,10 +99,9 @@ def sgd(poly,cannonical_rect):
         rect = affinity.rotate(rect, curr_params.alpha)
 
 
-
-poly = loads('POLYGON((-150 100, -50 150, 0 100, 110 160, 150 0, 50 -50, -100 -90, -150 100))')
-
 if __name__ == '__main__':
+
+    poly = loads('POLYGON((-150 80, -50 120, 0 100, 110 110, 150 0, 50 -50, -100 -90, -150 80))')
 
     if len(sys.argv) < 3:
         print(f'usage: python {sys.argv[0]} <width> <height>')
