@@ -15,7 +15,7 @@ from collections import namedtuple
 Params = namedtuple('Params',['x','y','alpha'])
 
 max_iteration = 1000
-learning_rate = .1
+learning_rate = .01
 loss_threshold_count = 20
 
 
@@ -40,11 +40,11 @@ def loss(poly, rect):
 
 # calculate gradient numericly:
 def gradient(poly,rect):
-    eps = Params(x=.1, y=.1, alpha=0.1)
+    eps = Params(x=1, y=1, alpha=1)
     l = loss(poly,rect)
-    return Params(x = l - loss(poly, affinity.translate(rect,eps.x, 0)),
-                  y = l- loss(poly, affinity.translate(rect,0, eps.y)),
-                  alpha = l- loss(poly, affinity.rotate(rect,eps.alpha, origin='centroid')))
+    return Params(x = (loss(poly, affinity.translate(rect,eps.x, 0)) - l) / eps.x,
+                  y = (loss(poly, affinity.translate(rect,0, eps.y)) - l) / eps.y,
+                  alpha = (loss(poly, affinity.rotate(rect,eps.alpha, origin='centroid')) - l) / eps.alpha )
 
 
 def sgd(poly,cannonical_rect):
