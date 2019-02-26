@@ -45,7 +45,7 @@ max_iteration = 1000
 learning_rate = .1
 loss_threshold_count = 40
 
-def sgd(poly,cannonical_rect):
+def sgd(poly,cannonical_rect, init_params=Params(x=0, y=0, alpha=0)):
     # initialize minimum loss with current loss
     min_loss = sys.float_info.max
     min_loss_index = 0
@@ -54,9 +54,7 @@ def sgd(poly,cannonical_rect):
     # x,y = aligned with polygon centroid
     # alpha = zero
     rect = cannonical_rect
-    curr_params = Params(x = poly.centroid.x - rect.centroid.x ,
-                         y = poly.centroid.y - rect.centroid.y ,
-                         alpha = 0.0)
+    curr_params = init_params
 
     # sgd loop TODO : add momentom
     for i in range (max_iteration) :
@@ -68,11 +66,6 @@ def sgd(poly,cannonical_rect):
         if (min_loss - curr_loss) > 1e-5 :
             min_loss_index = i
             min_loss = curr_loss
-
-        # check stopping condition
-        if curr_loss == 0 or i - min_loss_index > loss_threshold_count :
-            input(f'local minimum found. \n minimum loss:{min_loss} after {min_loss_index} iterations \n ok ?')
-            break
 
         # calculate gradient :
         g = gradient(poly,rect)
@@ -90,6 +83,13 @@ def sgd(poly,cannonical_rect):
         rect = affinity.translate(cannonical_rect, curr_params.x, curr_params.y)
         rect = affinity.rotate(rect, curr_params.alpha)
 
+        # check stopping condition
+        if curr_loss == 0 or i - min_loss_index > loss_threshold_count:
+            break
+
+    return min_loss, min_loss_index
+
+
 import numpy as np
 from scipy.optimize import minimize
 
@@ -101,9 +101,8 @@ def find_min(poly,rect):
         l = loss(poly,r)
         print (f'x:{x[0]} {x[1]} {x[2]} loss:{l}')
         draw(poly,r)
-
-
         return loss(poly,affinity.rotate(affinity.translate(rect, x[0], x[1]), x[2]))
+
 
     x0 =  np.array([poly.centroid.x - rect.centroid.x ,poly.centroid.y - rect.centroid.y ,0.0])
     res = minimize(minimize_function, x0, method='nelder-mead',options={'xtol': 1e-8, 'disp': True})
@@ -123,8 +122,26 @@ if __name__ == '__main__':
 
     rect = loads(f'POLYGON(({-w} {-h}, {-w} {h}, {w} {h}, {w} {-h}, {-w} {-h}))')
 
-    # sgd(poly,rect)
+    vertex = np.diff(poly.boundary.coords.xy)
+    vertex_azimuth = np.arctan2(vertex[1],vertex[0]) * 180.0 / np.pi
+    for alpha in vertex_azimuth:
+        # init params :
+        init_params = Params(x=poly.centroid.x - rect.centroid.x,
+                             y=poly.centroid.y - rect.centroid.y,
+                             alpha=alpha)
 
-    res = find_min(poly,rect)
-    input(f'minimize results:{res} \n ok ?')
+        # draw init position:
+#        draw(poly, affinity.rotate(affinity.translate(rect, init_params.x, init_params.y),init_params.alpha))
+#       input(f'init params:{init_params} \n ok ?')
+#        continue
+
+        res = sgd(poly,rect, init_params=init_params)
+
+        if res[0] < 1e-3:
+            break
+    input(f'local minimum found. \n minimum loss:{res[0]} after {res[1]} iterations. \n initial alpha:{alpha} \n ok ?')
+
+
+    #res = find_min(poly,rect)
+    #input(f'minimize results:{res} \n ok ?')
 
