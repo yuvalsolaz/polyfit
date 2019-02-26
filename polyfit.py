@@ -3,29 +3,20 @@
 from __future__ import (absolute_import, division, print_function)
 
 import sys
-import numpy as np
 from shapely.wkt import loads
 from shapely import affinity
-from geopandas import GeoSeries, GeoDataFrame
-
-import matplotlib.pyplot as plt
-fig, ax = plt.subplots(figsize=(5, 5))
 
 from collections import namedtuple
 Params = namedtuple('Params',['x','y','alpha'])
 
-max_iteration = 1000
-learning_rate = .01
-loss_threshold_count = 20
-
 '''
-def draw(shape,color='black'):
-    GeoSeries(shape).plot(ax=ax,color=    poly = loads('POLYGON((-150 100, -50 150, 0 100, 110 160, 150 0, 50 -50, -100 -90, -150 100))')
-color)
-    plt.pause(0.05)
+    graphics display module   
 '''
+from geopandas import GeoSeries
+import matplotlib.pyplot as plt
+fig, ax = plt.subplots(figsize=(5, 5))
 
-def draw_loss(poly,rect):
+def draw(poly, rect):
     plt.cla()
     GeoSeries(poly).plot(ax=ax,color='green')
     GeoSeries(rect).plot(ax=ax,color='yellow')
@@ -40,7 +31,7 @@ def xor(poly, rect='y'):
     return nonoverlap
 
 def loss(poly, rect):
-    return np.float(xor(poly,rect).area)
+    return xor(poly,rect).area
 
 # calculate gradient numericly:
 def gradient(poly,rect):
@@ -50,6 +41,9 @@ def gradient(poly,rect):
                   y = (loss(poly, affinity.translate(rect,0, eps.y)) - l) / eps.y,
                   alpha = (loss(poly, affinity.rotate(rect,eps.alpha, origin='centroid')) - l) / eps.alpha )
 
+max_iteration = 500
+learning_rate = .1
+loss_threshold_count = 20
 
 def sgd(poly,cannonical_rect):
     # initialize minimum loss with current loss
@@ -63,9 +57,7 @@ def sgd(poly,cannonical_rect):
                          y = poly.centroid.y - rect.centroid.y ,
                          alpha = 0.0)
 
-    min_loss_iteration = 0
-
-    # sgd loop
+    # sgd loop TODO : add inertaion
     for i in range (max_iteration) :
 
         # calculates current loss
@@ -78,14 +70,14 @@ def sgd(poly,cannonical_rect):
 
         # check stopping condition
         if curr_loss == 0 or i - min_loss_iteration > loss_threshold_count :
-            input(f'local minimum found. \n current loss : {curr_loss} \n ok ?')
+            input(f'local minimum found. \n minimum loss:{min_loss} after {min_loss_iteration} iterations \n ok ?')
             break
 
         # calculate gradient :
         g = gradient(poly,rect)
 
         # draw current position & current loss:
-        draw_loss(poly,rect)
+        draw(poly, rect)
         print (f'iteration:{i} current loss:{curr_loss} min loss:{min_loss} min loss iteration:{min_loss_iteration} grad:{g}')
 
         # update parameters x , y , alpha
