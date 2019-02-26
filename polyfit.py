@@ -41,9 +41,9 @@ def gradient(poly,rect):
                   y = (loss(poly, affinity.translate(rect,0, eps.y)) - l) / eps.y,
                   alpha = (loss(poly, affinity.rotate(rect,eps.alpha, origin='centroid')) - l) / eps.alpha )
 
-max_iteration = 500
+max_iteration = 1000
 learning_rate = .1
-loss_threshold_count = 20
+loss_threshold_count = 40
 
 def sgd(poly,cannonical_rect):
     # initialize minimum loss with current loss
@@ -57,7 +57,7 @@ def sgd(poly,cannonical_rect):
                          y = poly.centroid.y - rect.centroid.y ,
                          alpha = 0.0)
 
-    # sgd loop TODO : add inertaion
+    # sgd loop TODO : add momentom
     for i in range (max_iteration) :
 
         # calculates current loss
