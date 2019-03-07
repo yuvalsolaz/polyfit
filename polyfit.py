@@ -10,8 +10,18 @@ from collections import namedtuple
 Params = namedtuple('Params',['x','y','alpha'])
 
 '''
+gradient decent hyper params :
+'''
+max_iteration = 1000
+learning_rate_xy = .1
+learning_rate_alpha = .5
+momentom = .9
+loss_threshold_count = 20
+
+'''
     graphics display module   
 '''
+
 from geopandas import GeoSeries
 import matplotlib.pyplot as plt
 fig, ax = plt.subplots(figsize=(5, 5))
@@ -41,9 +51,6 @@ def gradient(poly,rect):
                   y = (loss(poly, affinity.translate(rect,0, eps.y)) - l) / eps.y,
                   alpha = (loss(poly, affinity.rotate(rect,eps.alpha, origin='centroid')) - l) / eps.alpha )
 
-max_iteration = 1000
-learning_rate = .1
-loss_threshold_count = 40
 
 def sgd(poly,cannonical_rect, init_params=Params(x=0, y=0, alpha=0)):
     # initialize minimum loss with current loss
@@ -55,6 +62,8 @@ def sgd(poly,cannonical_rect, init_params=Params(x=0, y=0, alpha=0)):
     # alpha = zero
     rect = cannonical_rect
     curr_params = init_params
+    v = Params(x=0, y=0, alpha=0)
+
 
     # sgd loop TODO : add momentom
     for i in range (max_iteration) :
@@ -63,21 +72,26 @@ def sgd(poly,cannonical_rect, init_params=Params(x=0, y=0, alpha=0)):
         curr_loss = loss(poly, rect)
 
         # update minimum loss iteration index:
-        if (min_loss - curr_loss) > 1e-5 :
+        if (min_loss - curr_loss) > 1e-2 :
             min_loss_index = i
             min_loss = curr_loss
 
         # calculate gradient :
         g = gradient(poly,rect)
 
+        # calculate valocity
+        v = Params(x = momentom*v.x + (1-momentom) * g.x,
+                        y = momentom * v.y + (1 - momentom) * g.y,
+                        alpha = momentom * v.alpha + (1 - momentom) * g.alpha)
+
         # draw current position & current loss:
         draw(poly, rect)
-        print (f'iteration:{i} current loss:{curr_loss} min loss:{min_loss} min loss iteration:{min_loss_index} grad:{g}')
+        print(f'iteration:{i} current loss:{curr_loss} min loss:{min_loss} min loss index:{min_loss_index} v:{v}')
 
         # update parameters x , y , alpha
-        curr_params = Params(x = curr_params.x - learning_rate * g.x,
-                             y = curr_params.y - learning_rate * g.y,
-                             alpha = curr_params.alpha - learning_rate * g.alpha)
+        curr_params = Params(x =curr_params.x - learning_rate_xy * v.x,
+                             y =curr_params.y - learning_rate_xy * v.y,
+                             alpha =curr_params.alpha - learning_rate_alpha * v.alpha)
 
         # translate rect:
         rect = affinity.translate(cannonical_rect, curr_params.x, curr_params.y)
